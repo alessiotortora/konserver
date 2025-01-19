@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { cache } from 'react';
 
 export async function createClient() {
   const cookieStore = await cookies();
@@ -30,3 +31,28 @@ export async function createClient() {
     },
   });
 }
+
+// Cache the user for the duration of the request
+export const getServerUser = cache(async () => {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error) {
+      console.error('[getServerUser] Error fetching user:', error.message);
+      return null;
+    }
+
+    if (!user) {
+      return null;
+    }
+
+    return user;
+  } catch (error) {
+    console.error('[getServerUser] Unexpected error:', error);
+    return null;
+  }
+});
