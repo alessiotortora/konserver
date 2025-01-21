@@ -1,12 +1,12 @@
 'use client';
 
 import { getSafeUser } from '@/lib/actions/get/get-safe-user';
-import { useAuthStore } from '@/store/auth-store';
+import { useUserStore } from '@/store/user-store';
 import { createBrowserClient } from '@supabase/ssr';
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { useCallback, useEffect, useRef } from 'react';
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function UserProvider({ children }: { children: React.ReactNode }) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const isInitialized = useRef(false);
@@ -16,7 +16,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey);
-  const { setUser, setLoading } = useAuthStore();
+  const { setUser, setLoading } = useUserStore();
 
   const handleAuthChange = useCallback(
     async (event: AuthChangeEvent | 'INITIAL', session: Session | null) => {

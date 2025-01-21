@@ -1,11 +1,11 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { useAuthStore } from '@/store/auth-store';
+import { useUserStore } from '@/store/user-store';
 import Link from 'next/link';
 
 export default function HomePage() {
-  const { user, isLoading } = useAuthStore();
+  const { user, isLoading } = useUserStore();
 
   if (isLoading) {
     return (

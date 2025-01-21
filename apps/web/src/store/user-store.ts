@@ -1,7 +1,7 @@
 import type { SafeUser } from '@/types/user';
 import { create } from 'zustand';
 
-interface AuthState {
+interface UserState {
   user: SafeUser | null;
   isLoading: boolean;
   setUser: (user: SafeUser | null) => void;
@@ -10,7 +10,7 @@ interface AuthState {
   get isAuthenticated(): boolean;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useUserStore = create<UserState>((set, get) => ({
   user: null,
   isLoading: true,
   setUser: (user) => set({ user }),
