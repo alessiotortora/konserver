@@ -1,12 +1,5 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
-import { AnimatePresence, motion } from 'motion/react';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -19,6 +12,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Spinner } from '@/components/ui/spinner';
+import { getSafeUser } from '@/lib/actions/get/get-safe-user';
+import { useUserStore } from '@/store/user-store';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AnimatePresence, motion } from 'motion/react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 import { RequestOTP, VerifyOTP } from '../actions';
 
@@ -48,6 +49,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [buttonState, setButtonState] = useState<ButtonState>('idle');
+  const { setUser } = useUserStore();
 
   const emailForm = useForm({
     resolver: zodResolver(emailFormSchema),
@@ -89,8 +91,14 @@ export default function LoginPage() {
     try {
       const result = await VerifyOTP(email, data.otp);
       if (result.success) {
-        router.push('/dashboard');
-        router.refresh();
+        const user = await getSafeUser();
+        if (user) {
+          setUser(user);
+          router.push('/dashboard');
+        } else {
+          setError('Failed to load user data. Please try again.');
+          setButtonState('otp');
+        }
       } else {
         setError(result.error ?? 'Invalid code. Please try again.');
         setButtonState('otp');
