@@ -28,11 +28,6 @@ export default async function SpaceLayout({ children, params }: SpaceLayoutProps
   return (
     <SpaceProvider space={space}>
       <div className="flex flex-col w-full">
-        <header className="border-b">
-          <div className="container flex items-center justify-between h-16">
-            <h1 className="text-lg font-semibold">{space.name}</h1>
-          </div>
-        </header>
         <main className="flex-1 container py-6">{children}</main>
       </div>
     </SpaceProvider>
