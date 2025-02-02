@@ -12,6 +12,7 @@ export const images = pgTable('images', {
   spaceId: uuid()
     .notNull()
     .references(() => spaces.id, { onDelete: 'cascade' }),
+  filename: varchar({ length: 256 }).notNull(),
   alt: varchar({ length: 256 }),
   publicId: varchar({ length: 512 }).notNull(),
   url: varchar({ length: 512 }).notNull(),
