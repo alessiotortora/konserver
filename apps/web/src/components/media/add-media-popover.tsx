@@ -2,11 +2,13 @@
 
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { uploadMedia } from '@/lib/actions/client/upload-media';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
+
 import { MediaUploader } from './media-uploader';
+import { uploadToCloudinary } from '@/lib/media/images/upload-to-cloudinary';
+import { uploadMedia } from '@/lib/media/upload-media';
+import { createUploadSignature } from '@/lib/media/images/create-upload-signature';
 
 interface AddMediaPopoverProps {
   spaceId: string;
@@ -18,33 +20,28 @@ export function AddMediaPopover({ spaceId }: AddMediaPopoverProps) {
   const handleUpload = async (files: File[]) => {
     setIsUploading(true);
 
-    try {
-      const uploadPromise = () =>
-        new Promise<void>((resolve, reject) => {
-          uploadMedia(files, spaceId, (filename, progress) => {
-            // You can use this to update a progress UI if needed
-            console.log(`${filename}: ${progress}%`);
-          })
-            .then((results) => {
-              if (!results.success) {
-                reject(new Error(results.error || 'Upload failed'));
-                return;
-              }
-              resolve();
-            })
-            .catch(reject);
-        });
+    const imageFiles = files.filter((file) => file.type.startsWith('image/'));
+    const videoFiles = files.filter((file) => file.type.startsWith('video/'));
 
-      await toast.promise(uploadPromise(), {
-        loading: 'Uploading media...',
-        success: 'Media uploaded successfully',
-        error: (error) => error.message || 'Failed to upload media',
-      });
+    try {
+      if (imageFiles.length > 0) {
+        for (const file of imageFiles) {
+
+          const {signature, timestamp} = await createUploadSignature({ spaceId })
+
+          console.log(signature, timestamp)
+
+          const {public_id, secure_url, width, format, bytes, alt} = await uploadToCloudinary(file, signature, timestamp)
+  
+          console.log(public_id, secure_url, width, format, bytes, alt)
+        }
+      }
+       
     } catch (error) {
       console.error('Upload error:', error);
     } finally {
       setIsUploading(false);
-    }
+    } 
   };
 
   return (
@@ -67,3 +64,4 @@ export function AddMediaPopover({ spaceId }: AddMediaPopoverProps) {
     </Popover>
   );
 }
+
