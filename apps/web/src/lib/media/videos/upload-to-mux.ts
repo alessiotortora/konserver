@@ -1,18 +1,19 @@
+interface MuxUploadResponse {
+  success: boolean;
+}
 
-export async function uploadToMux(file: File, uploadUrl: string) {
+export async function uploadToMux(file: File, uploadUrl: string): Promise<MuxUploadResponse> {
+  const response = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': file.type,
+    },
+    body: file,
+  });
 
-    const response = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': file.type,
-        },
-        body: file,
-      });
+  if (!response.ok) {
+    throw new Error('Failed to upload video to Mux');
+  }
 
-    if (!response.ok) {
-        throw new Error('Failed to upload video to Mux');
-    }
-
- 
-    return response;
-}  
+  return { success: true };
+}

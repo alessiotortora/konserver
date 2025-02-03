@@ -1,66 +1,33 @@
-import { createHmac } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 
 import { db } from '@/db';
 import { videos } from '@/db/schema/videos';
+import { headers } from 'next/headers';
 
-interface MuxAssetReadyEvent {
-  type: 'video.asset.ready';
+export interface WebhookEvent {
+  type: string;
   data: {
     id: string;
-    playback_ids: Array<{ id: string }>;
-    duration: number;
-    aspect_ratio: string;
-    upload_id: string;
+    status: string;
+    playback_ids?: Array<{ id: string }>;
   };
-}
-
-interface MuxAssetErrorEvent {
-  type: 'video.asset.errored';
-  data: {
-    id: string;
-    upload_id: string;
-  };
-}
-
-type MuxWebhookEvent = MuxAssetReadyEvent | MuxAssetErrorEvent;
-
-function verifyMuxSignature(rawBody: string, signature: string, secret: string): boolean {
-  const hmac = createHmac('sha256', secret);
-  hmac.update(rawBody);
-  const hash = hmac.digest('hex');
-  return hash === signature;
 }
 
 export async function POST(request: Request) {
   try {
-    const rawBody = await request.text();
-    const muxSignature = request.headers.get('mux-signature');
+    const headersList = headers();
+    const signature = (await headersList).get('mux-signature');
 
-    if (!muxSignature) {
-      return new NextResponse('No signature', { status: 400 });
+    if (!signature) {
+      return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    if (!process.env.MUX_WEBHOOK_SECRET) {
-      throw new Error('MUX_WEBHOOK_SECRET is not configured');
-    }
-
-    // Verify the webhook signature
-    const isValid = verifyMuxSignature(rawBody, muxSignature, process.env.MUX_WEBHOOK_SECRET);
-
-    if (!isValid) {
-      return new NextResponse('Invalid signature', { status: 400 });
-    }
-
-    // Parse the event
-    const event = JSON.parse(rawBody) as MuxWebhookEvent;
+    const event: WebhookEvent = await request.json();
 
     if (event.type === 'video.asset.ready') {
       const asset = event.data.id;
       const playbackId = event.data.playback_ids?.[0]?.id;
-      const duration = event.data.duration;
-      const aspectRatio = event.data.aspect_ratio;
 
       if (!playbackId) {
         return new NextResponse('No playback ID', { status: 400 });

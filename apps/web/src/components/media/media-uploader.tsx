@@ -16,6 +16,7 @@ interface MediaUploaderProps {
   maxSize?: number; // in bytes
   accept?: Record<string, string[]>;
   className?: string;
+  disabled?: boolean;
 }
 
 export function MediaUploader({
@@ -27,6 +28,7 @@ export function MediaUploader({
     'video/*': ['.mp4', '.webm', '.ogg'],
   },
   className,
+  disabled = false,
 }: MediaUploaderProps) {
   const [files, setFiles] = useState<MediaFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -64,6 +66,7 @@ export function MediaUploader({
     maxFiles: maxFiles - files.length,
     maxSize,
     accept,
+    disabled,
   });
 
   const removeFile = (name: string) => {
@@ -93,18 +96,21 @@ export function MediaUploader({
       <div
         {...getRootProps()}
         className={cn(
-          'border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors',
+          'border-2 border-dashed rounded-lg p-8 text-center transition-colors',
           isDragActive
             ? 'border-primary bg-primary/10'
-            : 'border-muted-foreground/25 hover:border-primary'
+            : 'border-muted-foreground/25 hover:border-primary',
+          disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
         )}
       >
-        <input {...getInputProps()} />
+        <input {...getInputProps()} disabled={disabled} />
         <UploadCloud className="mx-auto h-12 w-12 text-muted-foreground" />
         <p className="mt-2 text-sm text-muted-foreground">
           {isDragActive
             ? 'Drop the files here...'
-            : 'Drag & drop files here, or click to select files'}
+            : disabled
+              ? 'Upload is disabled while processing...'
+              : 'Drag & drop files here, or click to select files'}
         </p>
       </div>
 
@@ -115,8 +121,16 @@ export function MediaUploader({
               <div key={file.name} className="flex items-center justify-between p-2 border rounded">
                 <div className="flex flex-col flex-1 mr-2">
                   <span className="text-sm truncate max-w-[200px]">{file.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {(file.size / (1024 * 1024)).toFixed(2)} MB
+                  </span>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => removeFile(file.name)}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeFile(file.name)}
+                  disabled={disabled || isUploading}
+                >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
@@ -124,10 +138,14 @@ export function MediaUploader({
           </div>
 
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setFiles([])} disabled={isUploading}>
+            <Button
+              variant="outline"
+              onClick={() => setFiles([])}
+              disabled={disabled || isUploading}
+            >
               Cancel
             </Button>
-            <Button onClick={handleUpload} disabled={isUploading}>
+            <Button onClick={handleUpload} disabled={disabled || isUploading}>
               {isUploading ? 'Uploading...' : 'Upload'}
             </Button>
           </div>
@@ -136,4 +154,3 @@ export function MediaUploader({
     </div>
   );
 }
- 
