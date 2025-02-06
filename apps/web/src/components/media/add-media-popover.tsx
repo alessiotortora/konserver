@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { createImage } from '@/lib/actions/create/create-image';
 import { createVideo } from '@/lib/actions/create/create-video';
-import { revalidateMedia } from '@/lib/actions/revalidate/revalidate-media';
+import { revalidateImages } from '@/lib/actions/revalidate/revalidate-images';
+import { revalidateVideos } from '@/lib/actions/revalidate/revalidate-videos';
 import { createUploadSignature } from '@/lib/media/images/create-upload-signature';
 import { uploadToCloudinary } from '@/lib/media/images/upload-to-cloudinary';
 import { createUploadUrl } from '@/lib/media/videos/create-upload-url';
@@ -81,40 +82,54 @@ export function AddMediaPopover({ spaceId }: AddMediaPopoverProps) {
           }
         }
 
+        // Revalidate images if any were uploaded
+        if (imageFiles.length > 0) {
+          await revalidateImages();
+        }
+
         // Handle video uploads
         for (const file of videoFiles) {
           try {
-
-            console.log(file)
+            // Step 1: Create upload URL from MUX
             const { uploadUrl, uploadId } = await createUploadUrl({ spaceId });
+
+            console.log(uploadUrl, uploadId);
+
+            // Step 2: Create initial video record with processing status
+            await createVideo(
+              spaceId,
+              file.name,
+              uploadId, // Using uploadId as identifier for webhook matching
+              null,
+              null,
+              file.name
+            );
+
+            // Step 3: Upload to MUX
             const result = await uploadToMux(file, uploadUrl);
-
-            if (result.success) {
-              await createVideo(
-                spaceId,
-                uploadId,
-                uploadId, // Using uploadId as assetId temporarily
-                uploadId, // Using uploadId as playbackId temporarily
-                file.name,
-                file.name
-              );
-
-              processedFiles++;
-              setUploadState((prev) => ({
-                ...prev,
-                progress: (processedFiles / totalFiles) * 100,
-              }));
-
-              toast.success(`${file.name} uploaded and processing`);
+            if (!result.success) {
+              throw new Error('Failed to upload to MUX');
             }
+
+            processedFiles++;
+            setUploadState((prev) => ({
+              ...prev,
+              progress: (processedFiles / totalFiles) * 100,
+            }));
+
+            toast.success(
+              `${file.name} uploaded and processing. You'll be notified when it's ready.`
+            );
           } catch (error) {
             console.error(`Error uploading ${file.name}:`, error);
             toast.error(`Failed to upload ${file.name}. Please try again.`);
           }
         }
 
-        // Revalidate the media cache after successful uploads
-        await revalidateMedia();
+        // Revalidate videos if any were uploaded
+        if (videoFiles.length > 0) {
+          await revalidateVideos();
+        }
       } catch (error) {
         console.error('Upload error:', error);
         toast.error('Failed to upload media. Please try again later.');

@@ -3,6 +3,7 @@
 import { Card } from '@/components/ui/card';
 import type { Image as ImageType } from '@/db/schema/types';
 import type { Video as VideoType } from '@/db/schema/videos';
+import { videoStatusEnum } from '@/db/schema/videos';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 
@@ -32,20 +33,20 @@ export function MediaItem({ item }: MediaItemProps) {
           alt={item.alt || ''}
           className={cn(
             'object-cover transition-transform group-hover:scale-105',
-            item.status === 'processing' && 'opacity-50'
+            item.status === videoStatusEnum.enumValues[0] && 'opacity-50' // processing
           )}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
       )}
 
-      {isVideo && item.status === 'processing' && (
+      {isVideo && item.status === videoStatusEnum.enumValues[0] && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/50">
           <p className="text-sm text-muted-foreground">Processing...</p>
         </div>
       )}
 
-      {isVideo && item.status === 'failed' && (
+      {isVideo && item.status === videoStatusEnum.enumValues[2] && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/50">
           <p className="text-sm text-destructive">Failed to process</p>
         </div>

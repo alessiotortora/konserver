@@ -1,6 +1,6 @@
 'use server';
 
-import Mux from '@mux/mux-node';
+import { muxClient } from '@/utils/mux/client';
 
 interface CreateMuxUploadParams {
   spaceId: string;
@@ -11,11 +11,6 @@ interface MuxUploadResponse {
   uploadId: string;
 }
 
-const client = new Mux({
-  tokenId: process.env.MUX_TOKEN_ID || '',
-  tokenSecret: process.env.MUX_TOKEN_SECRET || '',
-});
-
 export async function createUploadUrl({
   spaceId,
 }: CreateMuxUploadParams): Promise<MuxUploadResponse> {
@@ -23,7 +18,7 @@ export async function createUploadUrl({
 
   console.log('Creating upload URL');
   try {
-    const upload = await client.video.uploads.create({
+    const upload = await muxClient.video.uploads.create({
       new_asset_settings: {
         playback_policy: ['public'],
         video_quality: 'basic',

@@ -2,22 +2,22 @@
 
 import { db } from '@/db';
 import { images, videos } from '@/db/schema';
-import type { Video } from '@/db/schema/types';
-import { eq } from 'drizzle-orm';
+import type { Image } from '@/db/schema/types';
+import type { Video } from '@/db/schema/videos';
+import { desc, eq } from 'drizzle-orm';
 
-export async function getSpaceMedia(spaceId: string) {
+interface SpaceMediaResult {
+  success: boolean;
+  images: Image[];
+  videos: Video[];
+  error?: string;
+}
+
+export async function getSpaceMedia(spaceId: string): Promise<SpaceMediaResult> {
   try {
     const [spaceImages, spaceVideos] = await Promise.all([
-      db.select().from(images).where(eq(images.spaceId, spaceId)),
-      db
-        .select()
-        .from(videos)
-        .where(eq(videos.spaceId, spaceId))
-        .then((videos) =>
-          videos.filter((video): video is Video => {
-            return video.playbackId !== null;
-          })
-        ),
+      db.select().from(images).where(eq(images.spaceId, spaceId)).orderBy(desc(images.createdAt)),
+      db.select().from(videos).where(eq(videos.spaceId, spaceId)).orderBy(desc(videos.createdAt)),
     ]);
 
     return {
@@ -29,6 +29,8 @@ export async function getSpaceMedia(spaceId: string) {
     console.error('Error fetching space media:', error);
     return {
       success: false,
+      images: [],
+      videos: [],
       error: 'Failed to fetch space media',
     };
   }
