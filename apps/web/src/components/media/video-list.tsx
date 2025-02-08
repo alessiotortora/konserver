@@ -1,33 +1,33 @@
-import { getSpaceVideos } from '@/lib/actions/get/get-space-videos';
-import { unstable_cache } from 'next/cache';
+'use client';
+
+import { trpc } from '@/trpc/client';
 import { MediaItem } from './media-item';
 
 interface VideoListProps {
   spaceId: string;
 }
 
-// Cache with forced revalidation
-const getCachedSpaceVideos = unstable_cache(
-  async (spaceId: string) => getSpaceVideos(spaceId),
-  ['space-videos'],
-  {
-    revalidate: false,
-    tags: ['space-videos'],
-  }
-);
-
-export async function VideoList({ spaceId }: VideoListProps) {
-  const result = await getCachedSpaceVideos(spaceId);
-
-  if (!result.success) {
-    return (
-      <div className="text-center py-4">
-        <p className="text-destructive">Failed to load videos</p>
-      </div>
-    );
-  }
-
-  const { videos } = result;
+export function VideoList({ spaceId }: VideoListProps) {
+  // Use tRPC query with suspense and optimized refetching
+  const [videos] = trpc.video.getSpaceVideos.useSuspenseQuery(
+    { spaceId },
+    {
+      // Refetch every 3 seconds while videos are processing
+      refetchInterval: (query) => {
+        const data = query.state.data;
+        const hasProcessingVideos = data?.some((video) => video.status === 'processing');
+        return hasProcessingVideos ? 3000 : false;
+      },
+      // Cache data for 1 second
+      staleTime: 1000,
+      // Refetch on window focus and mount
+      refetchOnWindowFocus: true,
+      refetchOnMount: true,
+      // Retry failed requests
+      retry: 3,
+      retryDelay: 1000,
+    }
+  );
 
   if (videos.length === 0) {
     return (

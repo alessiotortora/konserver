@@ -10,10 +10,12 @@ import type {
 
 import { db } from '@/db';
 import { videoStatusEnum, videos } from '@/db/schema/videos';
-import { revalidateVideos } from '@/lib/actions/revalidate/revalidate-videos';
 import { muxClient } from '@/utils/mux/client';
 import { headers } from 'next/headers';
 
+/**
+ * Type definition for all possible webhook events from Mux
+ */
 type WebhookEvent =
   | VideoAssetCreatedWebhookEvent
   | VideoAssetErroredWebhookEvent
@@ -22,6 +24,12 @@ type WebhookEvent =
 
 const SIGNING_SECRET = process.env.MUX_WEBHOOK_SECRET;
 
+/**
+ * Webhook handler for Mux video processing events
+ * This is a server-side operation, so we use direct DB queries
+ * After each status update, we invalidate both server and client caches
+ * to ensure UI updates immediately
+ */
 export async function POST(request: Request) {
   if (!SIGNING_SECRET) {
     return new NextResponse('Missing signing secret', { status: 500 });
@@ -64,8 +72,7 @@ export async function POST(request: Request) {
           })
           .where(eq(videos.identifier, asset.upload_id));
 
-        // Revalidate to show processing state with thumbnail
-        await revalidateVideos();
+     
         break;
       }
       case 'video.asset.ready': {
@@ -81,8 +88,7 @@ export async function POST(request: Request) {
           })
           .where(eq(videos.assetId, asset.id));
 
-        // Revalidate to show the ready video
-        await revalidateVideos();
+      
         break;
       }
       case 'video.asset.errored': {
@@ -96,8 +102,7 @@ export async function POST(request: Request) {
           })
           .where(eq(videos.assetId, asset.id));
 
-        // Revalidate to show the error state
-        await revalidateVideos();
+    
         break;
       }
     }

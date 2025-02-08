@@ -5,7 +5,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { createImage } from '@/lib/actions/create/create-image';
 import { createVideo } from '@/lib/actions/create/create-video';
 import { revalidateImages } from '@/lib/actions/revalidate/revalidate-images';
-import { revalidateVideos } from '@/lib/actions/revalidate/revalidate-videos';
 import { createUploadSignature } from '@/lib/media/images/create-upload-signature';
 import { uploadToCloudinary } from '@/lib/media/images/upload-to-cloudinary';
 import { createUploadUrl } from '@/lib/media/videos/create-upload-url';
@@ -128,7 +127,8 @@ export function AddMediaPopover({ spaceId }: AddMediaPopoverProps) {
 
         // Revalidate videos if any were uploaded
         if (videoFiles.length > 0) {
-          await revalidateVideos();
+          // Remove revalidateVideos call - React Query will handle this
+          // await revalidateVideos();
         }
       } catch (error) {
         console.error('Upload error:', error);
