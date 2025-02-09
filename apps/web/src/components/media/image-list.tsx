@@ -1,33 +1,20 @@
-import { getSpaceImages } from '@/lib/actions/get/get-space-images';
-import { unstable_cache } from 'next/cache';
+'use client';
+
+import { trpc } from '@/trpc/client';
 import { MediaItem } from './media-item';
 
 interface ImageListProps {
   spaceId: string;
 }
 
-// Cache with forced revalidation
-const getCachedSpaceImages = unstable_cache(
-  async (spaceId: string) => getSpaceImages(spaceId),
-  ['space-images'],
-  {
-    revalidate: false,
-    tags: ['space-images'],
-  }
-);
-
-export async function ImageList({ spaceId }: ImageListProps) {
-  const result = await getCachedSpaceImages(spaceId);
-
-  if (!result.success) {
-    return (
-      <div className="text-center py-4">
-        <p className="text-destructive">Failed to load images</p>
-      </div>
-    );
-  }
-
-  const { images } = result;
+export function ImageList({ spaceId }: ImageListProps) {
+  const [images] = trpc.image.getImages.useSuspenseQuery(
+    { spaceId },
+    {
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+    }
+  );
 
   if (images.length === 0) {
     return (

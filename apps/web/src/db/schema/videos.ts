@@ -1,6 +1,8 @@
 import { integer, pgEnum, pgTable, real, uuid, varchar } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm/relations';
 
+import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-zod';
+
 import { createdAt, updatedAt } from '@/utils/common-fields';
 
 import { spaces } from './spaces';
@@ -33,3 +35,7 @@ export const videosRelations = relations(videos, ({ one, many }) => ({
 
 export type Video = typeof videos.$inferSelect;
 export type NewVideo = typeof videos.$inferInsert;
+
+export const videoInsertSchema = createInsertSchema(videos);
+export const videoUpdateSchema = createUpdateSchema(videos);
+export const videoSelectSchema = createSelectSchema(videos);

@@ -10,15 +10,10 @@ interface MediaGridProps {
   spaceId: string;
 }
 
-/**
- * MediaGrid Component
- * Displays a grid of media items (images and videos)
- * Uses tRPC prefetching for optimal data loading
- */
 export async function MediaGrid({ spaceId }: MediaGridProps) {
-  // Prefetch videos data
-  // This will start loading the data before the component renders
-  await trpc.video.getSpaceVideos.prefetch({ spaceId });
+  
+  void trpc.video.getVideos.prefetch({ spaceId });
+  void trpc.image.getImages.prefetch({ spaceId });
 
   return (
     <HydrateClient>

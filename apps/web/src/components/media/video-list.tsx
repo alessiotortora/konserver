@@ -1,6 +1,8 @@
 'use client';
 
+import { useVideoRealtime } from '@/lib/media/videos/use-video-realtime';
 import { trpc } from '@/trpc/client';
+import { toast } from 'sonner';
 import { MediaItem } from './media-item';
 
 interface VideoListProps {
@@ -8,26 +10,29 @@ interface VideoListProps {
 }
 
 export function VideoList({ spaceId }: VideoListProps) {
-  // Use tRPC query with suspense and optimized refetching
-  const [videos] = trpc.video.getSpaceVideos.useSuspenseQuery(
+  const [videos] = trpc.video.getVideos.useSuspenseQuery(
     { spaceId },
     {
-      // Refetch every 3 seconds while videos are processing
-      refetchInterval: (query) => {
-        const data = query.state.data;
-        const hasProcessingVideos = data?.some((video) => video.status === 'processing');
-        return hasProcessingVideos ? 3000 : false;
-      },
-      // Cache data for 1 second
-      staleTime: 1000,
-      // Refetch on window focus and mount
-      refetchOnWindowFocus: true,
-      refetchOnMount: true,
-      // Retry failed requests
-      retry: 3,
-      retryDelay: 1000,
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
     }
   );
+
+  const utils = trpc.useUtils();
+
+  useVideoRealtime(spaceId, (payload) => {
+    console.log('Received realtime update for videos:', payload);
+
+    // Check if the video status changed to ready
+    const newRow = payload.new as { status?: string; filename?: string };
+    const oldRow = payload.old as { status?: string };
+
+    if (oldRow?.status !== 'ready' && newRow?.status === 'ready' && newRow.filename) {
+      toast.success(`Video "${newRow.filename}" is ready to view!`);
+    }
+
+    utils.video.getVideos.invalidate({ spaceId });
+  });
 
   if (videos.length === 0) {
     return (

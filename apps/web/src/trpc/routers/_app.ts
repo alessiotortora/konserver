@@ -1,21 +1,11 @@
 import type { inferRouterOutputs } from '@trpc/server';
-import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../init';
+import { imageRouter } from './image';
 import { videoRouter } from './video';
 
 export const appRouter = createTRPCRouter({
-  hello: protectedProcedure
-    .input(
-      z.object({
-        text: z.string(),
-      })
-    )
-    .query((opts) => {
-      return {
-        greeting: `hello ${opts.input.text}`,
-      };
-    }),
   video: videoRouter,
+  image: imageRouter,
 });
 // export type definition of API
 export type AppRouter = typeof appRouter;

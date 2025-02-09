@@ -29,6 +29,7 @@ export function MediaItem({ item }: MediaItemProps) {
 
       {isVideo && item.playbackId && (
         <Image
+          key={item.playbackId}
           src={`https://image.mux.com/${item.playbackId}/thumbnail.jpg?time=0`}
           alt={item.alt || ''}
           className={cn(
@@ -37,6 +38,7 @@ export function MediaItem({ item }: MediaItemProps) {
           )}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          priority
         />
       )}
 

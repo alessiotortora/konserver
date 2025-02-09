@@ -1,7 +1,7 @@
+import { createdAt, updatedAt } from '@/utils/common-fields';
 import { integer, jsonb, pgTable, uuid, varchar } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm/relations';
-
-import { createdAt, updatedAt } from '@/utils/common-fields';
+import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'drizzle-zod';
 
 import { events } from './events';
 import { imagesToContent } from './images-to-content';
@@ -31,3 +31,7 @@ export const imagesRelations = relations(images, ({ one, many }) => ({
 
 export type Image = typeof images.$inferSelect;
 export type NewImage = typeof images.$inferInsert;
+
+export const imageInsertSchema = createInsertSchema(images);
+export const imageSelectSchema = createSelectSchema(images);
+export const imageUpdateSchema = createUpdateSchema(images);

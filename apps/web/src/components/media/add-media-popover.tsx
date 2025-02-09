@@ -2,13 +2,11 @@
 
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { createImage } from '@/lib/actions/create/create-image';
-import { createVideo } from '@/lib/actions/create/create-video';
-import { revalidateImages } from '@/lib/actions/revalidate/revalidate-images';
 import { createUploadSignature } from '@/lib/media/images/create-upload-signature';
 import { uploadToCloudinary } from '@/lib/media/images/upload-to-cloudinary';
 import { createUploadUrl } from '@/lib/media/videos/create-upload-url';
 import { uploadToMux } from '@/lib/media/videos/upload-to-mux';
+import { trpc } from '@/trpc/client';
 import { Plus } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
@@ -35,6 +33,20 @@ export function AddMediaPopover({ spaceId }: AddMediaPopoverProps) {
     progress: 0,
   });
 
+  const utils = trpc.useUtils();
+  const createVideo = trpc.video.create.useMutation({
+    onSuccess: () => {
+      console.log('onSuccess');
+      utils.video.getVideos.invalidate({ spaceId });
+    },
+  });
+
+  const createImage = trpc.image.create.useMutation({
+    onSuccess: () => {
+      utils.image.getImages.invalidate({ spaceId });
+    },
+  });
+
   const handleUpload = useCallback(
     async (files: File[]) => {
       setUploadState({ isUploading: true, progress: 0 });
@@ -58,15 +70,15 @@ export function AddMediaPopover({ spaceId }: AddMediaPopoverProps) {
             const { signature, timestamp } = await createUploadSignature({ spaceId });
             const uploadResult = await uploadToCloudinary(file, signature, timestamp);
 
-            await createImage(
+            await createImage.mutateAsync({
               spaceId,
-              file.name,
-              uploadResult.public_id,
-              uploadResult.secure_url,
-              `${uploadResult.width}`,
-              uploadResult.format,
-              file.name
-            );
+              filename: file.name,
+              publicId: uploadResult.public_id,
+              url: uploadResult.secure_url,
+              resolution: `${uploadResult.width}`,
+              format: uploadResult.format,
+              alt: file.name,
+            });
 
             processedFiles++;
             setUploadState((prev) => ({
@@ -81,28 +93,20 @@ export function AddMediaPopover({ spaceId }: AddMediaPopoverProps) {
           }
         }
 
-        // Revalidate images if any were uploaded
-        if (imageFiles.length > 0) {
-          await revalidateImages();
-        }
-
         // Handle video uploads
         for (const file of videoFiles) {
           try {
             // Step 1: Create upload URL from MUX
             const { uploadUrl, uploadId } = await createUploadUrl({ spaceId });
 
-            console.log(uploadUrl, uploadId);
-
             // Step 2: Create initial video record with processing status
-            await createVideo(
+            await createVideo.mutateAsync({
               spaceId,
-              file.name,
-              uploadId, // Using uploadId as identifier for webhook matching
-              null,
-              null,
-              file.name
-            );
+              filename: file.name,
+              identifier: uploadId,
+              bytes: file.size,
+              alt: file.name,
+            });
 
             // Step 3: Upload to MUX
             const result = await uploadToMux(file, uploadUrl);
@@ -124,12 +128,6 @@ export function AddMediaPopover({ spaceId }: AddMediaPopoverProps) {
             toast.error(`Failed to upload ${file.name}. Please try again.`);
           }
         }
-
-        // Revalidate videos if any were uploaded
-        if (videoFiles.length > 0) {
-          // Remove revalidateVideos call - React Query will handle this
-          // await revalidateVideos();
-        }
       } catch (error) {
         console.error('Upload error:', error);
         toast.error('Failed to upload media. Please try again later.');
@@ -137,7 +135,7 @@ export function AddMediaPopover({ spaceId }: AddMediaPopoverProps) {
         setUploadState({ isUploading: false, progress: 0 });
       }
     },
-    [spaceId]
+    [spaceId, createVideo, createImage]
   );
 
   return (

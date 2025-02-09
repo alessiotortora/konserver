@@ -54,41 +54,33 @@ export async function POST(request: Request) {
       }
       case 'video.asset.created': {
         const asset = event.data;
+
+        if (!asset.upload_id) {
+          return new NextResponse('Upload ID not found', { status: 400 });
+        }
+
+        break;
+      }
+      case 'video.asset.ready': {
+        const asset = event.data;
         const playbackId = asset.playback_ids?.[0]?.id;
 
         if (!asset.upload_id) {
           return new NextResponse('Upload ID not found', { status: 400 });
         }
 
-        // Update video record with asset details
+        // Update video with final details
         await db
           .update(videos)
           .set({
             assetId: asset.id,
             playbackId,
-            status: videoStatusEnum.enumValues[0], // 'processing'
+            status: videoStatusEnum.enumValues[1], // 'ready'
             duration: asset.duration,
             aspectRatio: `${asset.aspect_ratio}`,
           })
           .where(eq(videos.identifier, asset.upload_id));
 
-     
-        break;
-      }
-      case 'video.asset.ready': {
-        const asset = event.data;
-
-        // Update video with final details
-        await db
-          .update(videos)
-          .set({
-            status: videoStatusEnum.enumValues[1], // 'ready'
-            duration: asset.duration,
-            aspectRatio: `${asset.aspect_ratio}`,
-          })
-          .where(eq(videos.assetId, asset.id));
-
-      
         break;
       }
       case 'video.asset.errored': {
@@ -102,7 +94,6 @@ export async function POST(request: Request) {
           })
           .where(eq(videos.assetId, asset.id));
 
-    
         break;
       }
     }
