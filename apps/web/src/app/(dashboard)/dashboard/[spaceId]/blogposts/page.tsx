@@ -1,4 +1,5 @@
+import { ComingSoon } from '@/components/layout/coming-soon';
 
 export default function BlogPostPage() {
-  return <div>Here will all the blog posts be listed</div>;
+  return <ComingSoon description="We're working on an amazing blogging feature. Stay tuned!" />;
 }

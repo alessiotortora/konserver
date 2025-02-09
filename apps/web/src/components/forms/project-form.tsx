@@ -1,6 +1,7 @@
 'use client';
 
-import type { Image as DbImage, ProjectWithContent, Video } from '@/db/schema/types';
+import type { ProjectWithContent } from '@/db/schema/types';
+import { useSpaceImages, useSpaceVideos } from '@/hooks/use-space-media';
 import { createProject } from '@/lib/actions/create/create-project';
 import { updateProject } from '@/lib/actions/update/update-project';
 import { type CreateProjectSchema, createProjectSchema } from '@/lib/schemas/project';
@@ -19,18 +20,13 @@ interface ProjectFormProps {
   spaceId: string;
   project?: ProjectWithContent;
   contentId?: string;
-  availableImages?: DbImage[];
-  availableVideos?: Video[];
 }
 
-export function ProjectForm({
-  spaceId,
-  project,
-  contentId,
-  availableImages = [],
-  availableVideos = [],
-}: ProjectFormProps) {
+export function ProjectForm({ spaceId, project, contentId }: ProjectFormProps) {
   const router = useRouter();
+  const availableImages = useSpaceImages(spaceId);
+  const availableVideos = useSpaceVideos(spaceId);
+
   const form = useForm<CreateProjectSchema>({
     resolver: zodResolver(createProjectSchema),
     defaultValues: {
@@ -138,6 +134,7 @@ export function ProjectForm({
                       selectedId={field.value || undefined}
                       onSelect={field.onChange}
                       triggerLabel={field.value ? 'Change Cover Image' : 'Select Cover Image'}
+                      spaceId={spaceId}
                     />
                   </FormControl>
                   <FormMessage />
@@ -160,6 +157,7 @@ export function ProjectForm({
                       selectedId={field.value || undefined}
                       onSelect={field.onChange}
                       triggerLabel={field.value ? 'Change Cover Video' : 'Select Cover Video'}
+                      spaceId={spaceId}
                     />
                   </FormControl>
                   <FormMessage />
@@ -212,6 +210,7 @@ export function ProjectForm({
                         items={availableImages.filter((img) => !field.value?.includes(img.id))}
                         onSelect={(id) => field.onChange([...(field.value || []), id])}
                         triggerLabel="Add Image"
+                        spaceId={spaceId}
                       />
                     </div>
                   </FormControl>
@@ -263,6 +262,7 @@ export function ProjectForm({
                         items={availableVideos.filter((vid) => !field.value?.includes(vid.id))}
                         onSelect={(id) => field.onChange([...(field.value || []), id])}
                         triggerLabel="Add Video"
+                        spaceId={spaceId}
                       />
                     </div>
                   </FormControl>

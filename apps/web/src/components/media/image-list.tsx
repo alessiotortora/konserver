@@ -1,6 +1,6 @@
 'use client';
 
-import { trpc } from '@/trpc/client';
+import { useSpaceImages } from '@/hooks/use-space-media';
 import { MediaItem } from './media-item';
 
 interface ImageListProps {
@@ -8,13 +8,7 @@ interface ImageListProps {
 }
 
 export function ImageList({ spaceId }: ImageListProps) {
-  const [images] = trpc.image.getImages.useSuspenseQuery(
-    { spaceId },
-    {
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-    }
-  );
+  const images = useSpaceImages(spaceId);
 
   if (images.length === 0) {
     return (

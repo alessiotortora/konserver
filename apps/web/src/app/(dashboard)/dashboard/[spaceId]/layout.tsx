@@ -27,8 +27,8 @@ export default async function SpaceLayout({ children, params }: SpaceLayoutProps
 
   return (
     <SpaceProvider space={space}>
-      <div className="flex flex-col w-full">
-        <main className="flex-1 container py-6">{children}</main>
+      <div className="flex flex-col w-full h-full">
+        <main className="flex-1 container h-full">{children}</main>
       </div>
     </SpaceProvider>
   );

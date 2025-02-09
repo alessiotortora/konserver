@@ -1,8 +1,7 @@
 'use client';
 
-import { useVideoRealtime } from '@/lib/media/videos/use-video-realtime';
-import { trpc } from '@/trpc/client';
-import { toast } from 'sonner';
+import { useSpaceVideos } from '@/hooks/use-space-media';
+import { useVideoRealtimeUpdates } from '@/hooks/use-video-realtime-updates';
 import { MediaItem } from './media-item';
 
 interface VideoListProps {
@@ -10,29 +9,10 @@ interface VideoListProps {
 }
 
 export function VideoList({ spaceId }: VideoListProps) {
-  const [videos] = trpc.video.getVideos.useSuspenseQuery(
-    { spaceId },
-    {
-      refetchOnWindowFocus: false,
-      refetchOnMount: false,
-    }
-  );
+  const videos = useSpaceVideos(spaceId);
 
-  const utils = trpc.useUtils();
-
-  useVideoRealtime(spaceId, (payload) => {
-    console.log('Received realtime update for videos:', payload);
-
-    // Check if the video status changed to ready
-    const newRow = payload.new as { status?: string; filename?: string };
-    const oldRow = payload.old as { status?: string };
-
-    if (oldRow?.status !== 'ready' && newRow?.status === 'ready' && newRow.filename) {
-      toast.success(`Video "${newRow.filename}" is ready to view!`);
-    }
-
-    utils.video.getVideos.invalidate({ spaceId });
-  });
+  // Enable real-time updates for the video list
+  useVideoRealtimeUpdates(spaceId);
 
   if (videos.length === 0) {
     return (
