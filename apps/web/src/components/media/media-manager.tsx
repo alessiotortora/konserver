@@ -52,6 +52,7 @@ export function MediaManager({
   const { uploadState, handleUpload } = useMediaUpload({
     spaceId,
     onUploadComplete: (id) => {
+      console.log('here is the id', id);
       onSelect?.(id);
       if (mode === 'upload') {
         setOpen(false);
