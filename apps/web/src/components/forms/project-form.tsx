@@ -7,6 +7,7 @@ import { TagInput } from '@/components/ui/tag-input';
 import { Textarea } from '@/components/ui/textarea';
 import type { ProjectWithContent } from '@/db/schema/types';
 import { useSpaceImages, useSpaceVideos } from '@/hooks/use-space-media';
+import { useVideoRealtimeUpdates } from '@/hooks/use-video-realtime-updates';
 import { createProject } from '@/lib/actions/create/create-project';
 import { updateProject } from '@/lib/actions/update/update-project';
 import { type CreateProjectSchema, createProjectSchema } from '@/lib/schemas/project';
@@ -29,6 +30,9 @@ export function ProjectForm({ spaceId, project, contentId }: ProjectFormProps) {
   const router = useRouter();
   const availableImages = useSpaceImages(spaceId);
   const availableVideos = useSpaceVideos(spaceId);
+
+  // Enable real-time updates for videos
+  useVideoRealtimeUpdates(spaceId);
 
   const form = useForm<CreateProjectSchema>({
     resolver: zodResolver(createProjectSchema),
@@ -212,17 +216,37 @@ export function ProjectForm({ spaceId, project, contentId }: ProjectFormProps) {
                 <FormItem>
                   <FormLabel>Cover Image</FormLabel>
                   <FormControl>
-                    <MediaSelector
-                      type="image"
-                      items={availableImages}
-                      selectedId={field.value || ''}
-                      onSelect={(id) => {
-                        field.onChange(id);
-                        form.setValue('cover.videoId', null);
-                      }}
-                      triggerLabel={field.value ? 'Change Cover Image' : 'Select Cover Image'}
-                      spaceId={spaceId}
-                    />
+                    <div className="space-y-4">
+                      <MediaSelector
+                        type="image"
+                        items={availableImages}
+                        selectedId={field.value || ''}
+                        onSelect={(id) => {
+                          field.onChange(id);
+                          form.setValue('cover.videoId', null);
+                        }}
+                        triggerLabel={field.value ? 'Change Cover Image' : 'Select Cover Image'}
+                        spaceId={spaceId}
+                      />
+                      {field.value && (
+                        <div className="relative aspect-video w-full max-w-xl overflow-hidden rounded-lg border">
+                          {(() => {
+                            const image = availableImages.find((img) => img.id === field.value);
+                            if (!image?.url) return null;
+
+                            return (
+                              <Image
+                                src={image.url}
+                                alt={image.alt || 'Cover preview'}
+                                className="object-cover"
+                                fill
+                                sizes="(max-width: 768px) 100vw, 768px"
+                              />
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -238,17 +262,37 @@ export function ProjectForm({ spaceId, project, contentId }: ProjectFormProps) {
                 <FormItem>
                   <FormLabel>Cover Video</FormLabel>
                   <FormControl>
-                    <MediaSelector
-                      type="video"
-                      items={availableVideos}
-                      selectedId={field.value || ''}
-                      onSelect={(id) => {
-                        field.onChange(id);
-                        form.setValue('cover.imageId', null);
-                      }}
-                      triggerLabel={field.value ? 'Change Cover Video' : 'Select Cover Video'}
-                      spaceId={spaceId}
-                    />
+                    <div className="space-y-4">
+                      <MediaSelector
+                        type="video"
+                        items={availableVideos}
+                        selectedId={field.value || ''}
+                        onSelect={(id) => {
+                          field.onChange(id);
+                          form.setValue('cover.imageId', null);
+                        }}
+                        triggerLabel={field.value ? 'Change Cover Video' : 'Select Cover Video'}
+                        spaceId={spaceId}
+                      />
+                      {field.value && (
+                        <div className="relative aspect-video w-full max-w-xl overflow-hidden rounded-lg border bg-muted">
+                          {(() => {
+                            const video = availableVideos.find((vid) => vid.id === field.value);
+                            if (!video?.playbackId) return null;
+
+                            return (
+                              <Image
+                                src={`https://image.mux.com/${video.playbackId}/thumbnail.jpg?time=0`}
+                                alt={video.alt || 'Video thumbnail'}
+                                className="object-cover"
+                                fill
+                                sizes="(max-width: 768px) 100vw, 768px"
+                              />
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -265,44 +309,57 @@ export function ProjectForm({ spaceId, project, contentId }: ProjectFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <div className="flex flex-wrap gap-2">
-                    {field.value?.map((imageId) => {
-                      const image = availableImages.find((img) => img.id === imageId);
-                      return (
-                        image && (
-                          <div
-                            key={imageId}
-                            className="relative h-20 w-20 overflow-hidden rounded-md border"
-                          >
-                            <Image
-                              src={image.url}
-                              alt={image.alt || ''}
-                              className="object-cover"
-                              fill
-                              sizes="80px"
-                            />
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="icon"
-                              className="absolute right-1 top-1 h-6 w-6"
-                              onClick={() =>
-                                field.onChange(field.value?.filter((id) => id !== imageId))
-                              }
-                            >
-                              ×
-                            </Button>
-                          </div>
-                        )
-                      );
-                    })}
-                    <MediaSelector
-                      type="image"
-                      items={availableImages.filter((img) => !field.value?.includes(img.id))}
-                      onSelect={(id) => field.onChange([...(field.value || []), id])}
-                      triggerLabel="Add Image"
-                      spaceId={spaceId}
-                    />
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap gap-2">
+                      <MediaSelector
+                        type="image"
+                        items={availableImages}
+                        selectedId={field.value?.[field.value.length - 1] || ''}
+                        onSelect={(id) => {
+                          const newImages = field.value || [];
+                          if (!newImages.includes(id)) {
+                            field.onChange([...newImages, id]);
+                          }
+                        }}
+                        triggerLabel="Add Image"
+                        spaceId={spaceId}
+                      />
+                    </div>
+                    {field.value && field.value.length > 0 && (
+                      <div className="grid grid-cols-3 gap-4">
+                        {field.value.map((imageId) => {
+                          const image = availableImages.find((img) => img.id === imageId);
+                          return (
+                            image && (
+                              <div
+                                key={imageId}
+                                className="group relative aspect-video overflow-hidden rounded-lg border bg-muted"
+                              >
+                                <Image
+                                  src={image.url}
+                                  alt={image.alt || ''}
+                                  className="object-cover"
+                                  fill
+                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center bg-background/80 opacity-0 transition-opacity group-hover:opacity-100">
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() =>
+                                      field.onChange(field.value?.filter((id) => id !== imageId))
+                                    }
+                                  >
+                                    Remove
+                                  </Button>
+                                </div>
+                              </div>
+                            )
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </FormControl>
                 <FormMessage />
@@ -319,42 +376,65 @@ export function ProjectForm({ spaceId, project, contentId }: ProjectFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <div className="flex flex-wrap gap-2">
-                    {field.value?.map((videoId) => {
-                      const video = availableVideos.find((vid) => vid.id === videoId);
-                      return (
-                        video && (
-                          <div
-                            key={videoId}
-                            className="relative aspect-video w-40 overflow-hidden rounded-md border bg-muted"
-                          >
-                            <div className="absolute inset-0 flex items-center justify-center p-2">
-                              <span className="text-sm text-muted-foreground">
-                                {video.alt || video.playbackId}
-                              </span>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="icon"
-                              className="absolute right-1 top-1 h-6 w-6"
-                              onClick={() =>
-                                field.onChange(field.value?.filter((id) => id !== videoId))
-                              }
-                            >
-                              ×
-                            </Button>
-                          </div>
-                        )
-                      );
-                    })}
-                    <MediaSelector
-                      type="video"
-                      items={availableVideos.filter((vid) => !field.value?.includes(vid.id))}
-                      onSelect={(id) => field.onChange([...(field.value || []), id])}
-                      triggerLabel="Add Video"
-                      spaceId={spaceId}
-                    />
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap gap-2">
+                      <MediaSelector
+                        type="video"
+                        items={availableVideos}
+                        selectedId={field.value?.[field.value.length - 1] || ''}
+                        onSelect={(id) => {
+                          const newVideos = field.value || [];
+                          if (!newVideos.includes(id)) {
+                            field.onChange([...newVideos, id]);
+                          }
+                        }}
+                        triggerLabel="Add Video"
+                        spaceId={spaceId}
+                      />
+                    </div>
+                    {field.value && field.value.length > 0 && (
+                      <div className="grid grid-cols-3 gap-4">
+                        {field.value.map((videoId) => {
+                          const video = availableVideos.find((vid) => vid.id === videoId);
+                          return (
+                            video && (
+                              <div
+                                key={videoId}
+                                className="group relative aspect-video overflow-hidden rounded-lg border bg-muted"
+                              >
+                                {video.playbackId ? (
+                                  <Image
+                                    src={`https://image.mux.com/${video.playbackId}/thumbnail.jpg?time=0`}
+                                    alt={video.alt || ''}
+                                    className="object-cover"
+                                    fill
+                                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                  />
+                                ) : (
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <span className="text-sm text-muted-foreground">
+                                      {video.status === 'processing' ? 'Processing...' : 'Failed'}
+                                    </span>
+                                  </div>
+                                )}
+                                <div className="absolute inset-0 flex items-center justify-center bg-background/80 opacity-0 transition-opacity group-hover:opacity-100">
+                                  <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() =>
+                                      field.onChange(field.value?.filter((id) => id !== videoId))
+                                    }
+                                  >
+                                    Remove
+                                  </Button>
+                                </div>
+                              </div>
+                            )
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </FormControl>
                 <FormMessage />

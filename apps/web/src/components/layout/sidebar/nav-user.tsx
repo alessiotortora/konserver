@@ -69,6 +69,7 @@ export function NavUser() {
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
+                  {/* TODO: update name when user is updated */}
                   <span className="truncate font-semibold">{user?.fullName}</span>
                   <span className="truncate text-xs">{user?.email}</span>
                 </div>

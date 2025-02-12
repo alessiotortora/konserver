@@ -41,8 +41,7 @@ export async function updateProject(
       tags,
       details,
       status,
-      coverImageId,
-      coverVideoId,
+      cover,
       images = [],
       videos = [],
     } = validatedFields.data;
@@ -55,8 +54,8 @@ export async function updateProject(
         description,
         tags,
         status,
-        coverImageId,
-        coverVideoId,
+        coverImageId: cover.type === 'image' ? cover.imageId : null,
+        coverVideoId: cover.type === 'video' ? cover.videoId : null,
       })
       .where(and(eq(content.id, contentId), eq(content.spaceId, spaceId)));
 

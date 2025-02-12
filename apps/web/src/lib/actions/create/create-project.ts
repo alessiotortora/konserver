@@ -35,8 +35,7 @@ export async function createProject(spaceId: string, formData: CreateProjectSche
       tags,
       details,
       status,
-      coverImageId,
-      coverVideoId,
+      cover,
       images = [],
       videos = [],
     } = validatedFields.data;
@@ -51,8 +50,8 @@ export async function createProject(spaceId: string, formData: CreateProjectSche
         tags,
         status,
         contentType: 'project',
-        coverImageId,
-        coverVideoId,
+        coverImageId: cover.type === 'image' ? cover.imageId : null,
+        coverVideoId: cover.type === 'video' ? cover.videoId : null,
       })
       .returning();
 

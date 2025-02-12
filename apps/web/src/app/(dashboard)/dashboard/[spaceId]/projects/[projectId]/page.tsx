@@ -1,5 +1,6 @@
 import { ProjectForm } from '@/components/forms/project-form';
 import { Heading } from '@/components/layout/heading';
+import { PageContainer } from '@/components/layout/page-container';
 import { getProject } from '@/lib/actions/get/get-project';
 import { notFound } from 'next/navigation';
 
@@ -18,14 +19,16 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <Heading title="Edit Project" description="Update your project information" />
+    <PageContainer>
+      <div className="space-y-6">
+        <Heading title="Edit Project" description="Update your project information" />
 
-      <ProjectForm
-        spaceId={spaceId}
-        project={projectResult.project}
-        contentId={projectResult.project.content.id}
-      />
-    </div>
+        <ProjectForm
+          spaceId={spaceId}
+          project={projectResult.project}
+          contentId={projectResult.project.content.id}
+        />
+      </div>
+    </PageContainer>
   );
 }

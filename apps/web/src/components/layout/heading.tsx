@@ -1,3 +1,9 @@
+'use client';
+
+import { usePageTitleStore } from '@/store/use-page-title-store';
+import { useInView } from 'motion/react';
+import { useEffect, useRef } from 'react';
+
 export function Heading({
   title,
   description,
@@ -5,8 +11,16 @@ export function Heading({
   title: string;
   description: string;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { amount: 0.3 });
+  const setTitle = usePageTitleStore((state) => state.setTitle);
+
+  useEffect(() => {
+    setTitle(isInView ? '' : title);
+  }, [isInView, setTitle, title]);
+
   return (
-    <div>
+    <div ref={ref}>
       <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
       <p className="text-muted-foreground">{description}</p>
     </div>

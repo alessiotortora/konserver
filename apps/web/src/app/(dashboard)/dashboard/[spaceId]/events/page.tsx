@@ -1,5 +1,12 @@
-
+import { Heading } from '@/components/layout/heading';
+import { PageContainer } from '@/components/layout/page-container';
 
 export default function EventPage() {
-  return <div>Here will all the events be listed</div>;
+  return (
+    <PageContainer>
+      <div className="space-y-6">
+        <Heading title="Events" description="Manage and organize your events" />
+      </div>
+    </PageContainer>
+  );
 }
