@@ -13,7 +13,12 @@ import { MediaUploader } from './media-uploader';
 
 export interface MediaManagerProps {
   spaceId: string;
-  items?: (DbImage | Video)[];
+  items?: (DbImage | Video)[] & {
+    hasNextPage?: boolean;
+    fetchNextPage?: () => Promise<unknown>;
+    isFetchingNextPage?: boolean;
+    isLoading?: boolean;
+  };
   selectedId?: string;
   onSelect?: (id: string) => void;
   mode?: 'gallery' | 'upload' | 'all';
@@ -52,7 +57,6 @@ export function MediaManager({
   const { uploadState, handleUpload } = useMediaUpload({
     spaceId,
     onUploadComplete: (id) => {
-      console.log('here is the id', id);
       onSelect?.(id);
       if (mode === 'upload') {
         setOpen(false);
@@ -79,6 +83,76 @@ export function MediaManager({
   const defaultTab = mode === 'upload' ? 'upload' : 'gallery';
   const showTabs = mode === 'all';
 
+  const gallery = (
+    <ScrollArea className="h-[min(calc(100vh-10rem),480px)]">
+      <div className="grid grid-cols-2 gap-2 p-4">
+        {items.isLoading ? (
+          <div className="col-span-2 flex justify-center py-8">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="col-span-2 flex justify-center py-8">
+            <p className="text-muted-foreground">No items found</p>
+          </div>
+        ) : (
+          filteredItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => {
+                onSelect?.(item.id);
+                if (mode === 'gallery') {
+                  setOpen(false);
+                }
+              }}
+              className={cn(
+                'group relative aspect-video overflow-hidden rounded-lg border bg-muted transition-colors hover:border-primary',
+                selectedId === item.id && 'border-primary'
+              )}
+            >
+              {isImage(item) ? (
+                <Image
+                  src={item.url}
+                  alt={item.alt || ''}
+                  className="object-cover"
+                  fill
+                  sizes="(max-width: 768px) 50vw, 33vw"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center">
+                  {item.playbackId ? (
+                    <Image
+                      src={`https://image.mux.com/${item.playbackId}/thumbnail.jpg?time=0`}
+                      alt={item.alt || ''}
+                      className="object-cover"
+                      fill
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                    />
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      {item.status === 'processing' ? 'Processing...' : 'Failed'}
+                    </span>
+                  )}
+                </div>
+              )}
+            </button>
+          ))
+        )}
+      </div>
+      {'hasNextPage' in items && items.hasNextPage && (
+        <div className="flex justify-center p-4 pt-0">
+          <Button
+            variant="outline"
+            onClick={() => items.fetchNextPage?.()}
+            disabled={items.isFetchingNextPage}
+          >
+            {items.isFetchingNextPage ? 'Loading...' : 'Load More'}
+          </Button>
+        </div>
+      )}
+    </ScrollArea>
+  );
+
   const content = (
     <div className="space-y-4">
       {showTabs ? (
@@ -92,39 +166,27 @@ export function MediaManager({
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="gallery">
-            <MediaGallery
-              items={filteredItems}
-              selectedId={selectedId}
-              onSelect={(id) => {
-                onSelect?.(id);
-                setOpen(false);
-              }}
-            />
+          <TabsContent value="gallery" className="mt-0">
+            {gallery}
           </TabsContent>
 
-          <TabsContent value="upload">
-            <MediaUploader
-              onUpload={handleUpload}
-              disabled={uploadState.isUploading}
-              accept={acceptedFileTypes}
-            />
-            {showProgress && uploadState.isUploading && (
-              <UploadProgress progress={uploadState.progress} />
-            )}
+          <TabsContent value="upload" className="mt-0">
+            <div className="p-4">
+              <MediaUploader
+                onUpload={handleUpload}
+                disabled={uploadState.isUploading}
+                accept={acceptedFileTypes}
+              />
+              {showProgress && uploadState.isUploading && (
+                <UploadProgress progress={uploadState.progress} />
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       ) : mode === 'gallery' ? (
-        <MediaGallery
-          items={filteredItems}
-          selectedId={selectedId}
-          onSelect={(id) => {
-            onSelect?.(id);
-            setOpen(false);
-          }}
-        />
+        gallery
       ) : (
-        <div className="space-y-4">
+        <div className="p-4">
           <MediaUploader
             onUpload={handleUpload}
             disabled={uploadState.isUploading}
@@ -145,59 +207,12 @@ export function MediaManager({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant={triggerVariant} type="button">
-          {triggerLabel}
-        </Button>
+        <Button variant={triggerVariant}>{triggerLabel}</Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[800px] p-4" align="start">
+      <PopoverContent className="w-[min(calc(100vw-2rem),480px)] p-0" align="start">
         {content}
       </PopoverContent>
     </Popover>
-  );
-}
-
-interface MediaGalleryProps {
-  items: (DbImage | Video)[];
-  selectedId?: string;
-  onSelect: (id: string) => void;
-}
-
-function MediaGallery({ items, selectedId, onSelect }: MediaGalleryProps) {
-  return (
-    <ScrollArea className="h-[300px]">
-      <div className="grid grid-cols-3 gap-4">
-        {items.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => onSelect(item.id)}
-            className={cn(
-              'relative aspect-video overflow-hidden rounded-lg border-2 transition-all hover:border-primary',
-              item.id === selectedId ? 'border-primary ring-2 ring-primary' : 'border-muted'
-            )}
-          >
-            {isImage(item) && (
-              <Image
-                src={item.url}
-                alt={item.alt || ''}
-                className="object-cover"
-                fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              />
-            )}
-            {isVideo(item) && item.playbackId && (
-              <div className="relative h-full w-full bg-muted">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-sm text-muted-foreground">
-                    Video: {item.alt || item.playbackId}
-                  </span>
-                </div>
-              </div>
-            )}
-          </button>
-        ))}
-      </div>
-    </ScrollArea>
   );
 }
 

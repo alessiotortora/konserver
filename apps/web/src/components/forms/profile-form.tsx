@@ -1,6 +1,8 @@
 'use client';
 
+import { getSafeUser } from '@/lib/actions/get/get-safe-user';
 import { updateUserProfile } from '@/lib/actions/update/update-user-profile';
+import { useUserStore } from '@/store/user-store';
 import type { SafeUser } from '@/types/user';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -23,6 +25,7 @@ interface ProfileFormProps {
 }
 
 export function ProfileForm({ user }: ProfileFormProps) {
+  const { setUser } = useUserStore();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -39,6 +42,11 @@ export function ProfileForm({ user }: ProfileFormProps) {
     if (!result.success) {
       toast.error(result.error || 'Something went wrong');
       return;
+    }
+
+    const updatedUser = await getSafeUser();
+    if (updatedUser) {
+      setUser(updatedUser);
     }
 
     toast.success('Profile updated successfully');

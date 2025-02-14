@@ -5,7 +5,7 @@ import { cache } from 'react';
 
 import { db } from '@/db';
 import { users } from '@/db/schema';
-import { getServerUser } from '@/utils/supabase/server';
+import { getServerUser } from '@/utils/supabase/client/server';
 
 export const getUser = cache(async (options?: { includeSocialLinks?: boolean }) => {
   const authUser = await getServerUser();

@@ -1,7 +1,9 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import { useSpaceVideos } from '@/hooks/use-space-media';
 import { useVideoRealtimeUpdates } from '@/hooks/use-video-realtime-updates';
+import { MediaGridLayout } from './media-grid-layout';
 import { MediaItem } from './media-item';
 
 interface VideoListProps {
@@ -14,19 +16,33 @@ export function VideoList({ spaceId }: VideoListProps) {
   // Enable real-time updates for the video list
   useVideoRealtimeUpdates(spaceId);
 
-  if (videos.length === 0) {
+  if (videos.isLoading) {
     return (
-      <div className="text-center py-4">
-        <p className="text-muted-foreground">No videos found</p>
+      <div className="flex justify-center py-8">
+        <p className="text-muted-foreground">Loading videos...</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {videos.map((video) => (
-        <MediaItem key={video.id} item={video} />
-      ))}
+    <div className="space-y-4">
+      <MediaGridLayout items={videos} emptyMessage="No videos found">
+        {videos.map((video) => (
+          <MediaItem key={video.id} item={video} />
+        ))}
+      </MediaGridLayout>
+
+      {videos.hasNextPage && (
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            onClick={() => videos.fetchNextPage()}
+            disabled={videos.isFetchingNextPage}
+          >
+            {videos.isFetchingNextPage ? 'Loading...' : 'Load More'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

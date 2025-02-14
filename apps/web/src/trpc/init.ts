@@ -1,4 +1,4 @@
-import { getSession } from '@/utils/supabase/session';
+import { getSession } from '@/utils/supabase/auth/session';
 import { TRPCError, initTRPC } from '@trpc/server';
 import { cache } from 'react';
 import superjson from 'superjson';

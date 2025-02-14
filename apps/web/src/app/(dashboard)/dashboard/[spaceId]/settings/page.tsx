@@ -36,7 +36,7 @@ export default async function SettingsPage() {
             <TabsTrigger value="space">Space Settings</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="user" className="space-y-8">
+          <TabsContent value="user" className="space-y-8 max-w-[772px] mx-auto">
             <div className="space-y-4">
               <div>
                 <h2 className="text-lg font-semibold mb-2">Profile</h2>
@@ -62,7 +62,7 @@ export default async function SettingsPage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="space" className="space-y-8">
+          <TabsContent value="space" className="space-y-8 max-w-[772px] mx-auto">
             <div>
               <h2 className="text-lg font-semibold mb-2">Space Details</h2>
               <p className="text-sm text-muted-foreground mb-4">Manage your space settings</p>

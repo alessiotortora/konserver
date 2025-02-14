@@ -3,24 +3,57 @@ import { videoInsertSchema, videos } from '@/db/schema';
 
 import { TRPCError } from '@trpc/server';
 
-import { desc, eq } from 'drizzle-orm';
+import { and, desc, eq, lt } from 'drizzle-orm';
 import { z } from 'zod';
 import { baseProcedure, createTRPCRouter } from '../init';
 
-const spaceIdSchema = z.object({
+const getVideosSchema = z.object({
   spaceId: z.string().uuid(),
+  cursor: z.string().uuid().optional(),
+  limit: z.number().min(1).max(50).default(20),
 });
 
 export const videoRouter = createTRPCRouter({
-  getVideos: baseProcedure.input(spaceIdSchema).query(async ({ input }) => {
+  getVideos: baseProcedure.input(getVideosSchema).query(async ({ input }) => {
     try {
-      const spaceVideos = await db
+      const { spaceId, cursor, limit } = input;
+
+      if (cursor) {
+        const cursorVideo = await db.select().from(videos).where(eq(videos.id, cursor)).limit(1);
+        if (cursorVideo.length > 0) {
+          const items = await db
+            .select()
+            .from(videos)
+            .where(and(eq(videos.spaceId, spaceId), lt(videos.createdAt, cursorVideo[0].createdAt)))
+            .orderBy(desc(videos.createdAt))
+            .limit(limit + 1);
+
+          let nextCursor: typeof cursor | undefined = undefined;
+          if (items.length > limit) {
+            const nextItem = items.pop();
+            nextCursor = nextItem?.id;
+          }
+          return { items, nextCursor };
+        }
+      }
+
+      const items = await db
         .select()
         .from(videos)
-        .where(eq(videos.spaceId, input.spaceId))
-        .orderBy(desc(videos.createdAt));
+        .where(eq(videos.spaceId, spaceId))
+        .orderBy(desc(videos.createdAt))
+        .limit(limit + 1);
 
-      return spaceVideos;
+      let nextCursor: typeof cursor | undefined = undefined;
+      if (items.length > limit) {
+        const nextItem = items.pop();
+        nextCursor = nextItem?.id;
+      }
+
+      return {
+        items,
+        nextCursor,
+      };
     } catch (error) {
       console.error('Error fetching space videos:', error);
       throw new TRPCError({

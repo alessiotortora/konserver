@@ -16,7 +16,7 @@ export function MediaItem({ item }: MediaItemProps) {
   const isVideo = 'playbackId' in item;
 
   return (
-    <Card className="group relative aspect-square overflow-hidden">
+    <Card className="group relative aspect-[16/9] overflow-hidden">
       {isImage && (
         <Image
           src={item.url}

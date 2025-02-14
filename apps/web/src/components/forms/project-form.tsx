@@ -28,21 +28,10 @@ interface ProjectFormProps {
 
 export function ProjectForm({ spaceId, project, contentId }: ProjectFormProps) {
   const router = useRouter();
-  const availableImages = useSpaceImages(spaceId);
-  const availableVideos = useSpaceVideos(spaceId);
-
-  // Enable real-time updates for videos
-  useVideoRealtimeUpdates(spaceId);
-
   const form = useForm<CreateProjectSchema>({
     resolver: zodResolver(createProjectSchema),
     defaultValues: {
       title: project?.content.title || '',
-      description: project?.content.description || '',
-      year: project?.year || new Date().getFullYear(),
-      tags: project?.content.tags || [],
-      details: (project?.details as Record<string, unknown>) || {},
-      status: project?.content.status || 'draft',
       cover: project?.content.coverImage
         ? {
             type: 'image',
@@ -60,10 +49,21 @@ export function ProjectForm({ spaceId, project, contentId }: ProjectFormProps) {
               imageId: null,
               videoId: null,
             },
+      description: project?.content.description || '',
+      year: project?.year || new Date().getFullYear(),
+      tags: project?.content.tags || [],
+      details: (project?.details as Record<string, unknown>) || {},
       images: project?.images?.map((img) => img.id) || [],
       videos: project?.videos?.map((vid) => vid.id) || [],
+      status: project?.content.status || 'draft',
     },
   });
+
+  const availableImages = useSpaceImages(spaceId);
+  const availableVideos = useSpaceVideos(spaceId);
+
+  // Enable real-time updates for videos
+  useVideoRealtimeUpdates(spaceId);
 
   async function onSubmit(values: CreateProjectSchema) {
     if (project && contentId) {
@@ -95,6 +95,7 @@ export function ProjectForm({ spaceId, project, contentId }: ProjectFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* 1. Title */}
         <FormField
           control={form.control}
           name="title"
@@ -102,13 +103,136 @@ export function ProjectForm({ spaceId, project, contentId }: ProjectFormProps) {
             <FormItem>
               <FormLabel>Title</FormLabel>
               <FormControl>
-                <Input {...field} />
+                <Input {...field} placeholder="Enter project title" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
+        {/* 2. Cover Section */}
+        <FormField
+          control={form.control}
+          name="cover.type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Cover Type</FormLabel>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="none" id="none" />
+                    <label htmlFor="none">None</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="image" id="image" />
+                    <label htmlFor="image">Image</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="video" id="video" />
+                    <label htmlFor="video">Video</label>
+                  </div>
+                </RadioGroup>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {form.watch('cover.type') === 'image' && (
+          <FormField
+            control={form.control}
+            name="cover.imageId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Cover Image</FormLabel>
+                <FormControl>
+                  <div className="space-y-4">
+                    <MediaSelector
+                      type="image"
+                      items={availableImages}
+                      selectedId={field.value || ''}
+                      onSelect={(id) => {
+                        field.onChange(id);
+                        form.setValue('cover.videoId', null);
+                      }}
+                      triggerLabel={field.value ? 'Change Cover Image' : 'Select Cover Image'}
+                      spaceId={spaceId}
+                    />
+                    {field.value && (
+                      <div className="relative aspect-video w-full max-w-xl overflow-hidden rounded-lg border">
+                        {(() => {
+                          const image = availableImages.find((img) => img.id === field.value);
+                          if (!image?.url) return null;
+                          return (
+                            <Image
+                              src={image.url}
+                              alt={image.alt || 'Cover preview'}
+                              className="object-cover"
+                              fill
+                              sizes="(max-width: 768px) 100vw, 768px"
+                            />
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {form.watch('cover.type') === 'video' && (
+          <FormField
+            control={form.control}
+            name="cover.videoId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Cover Video</FormLabel>
+                <FormControl>
+                  <div className="space-y-4">
+                    <MediaSelector
+                      type="video"
+                      items={availableVideos}
+                      selectedId={field.value || ''}
+                      onSelect={(id) => {
+                        field.onChange(id);
+                        form.setValue('cover.imageId', null);
+                      }}
+                      triggerLabel={field.value ? 'Change Cover Video' : 'Select Cover Video'}
+                      spaceId={spaceId}
+                    />
+                    {field.value && (
+                      <div className="relative aspect-video w-full max-w-xl overflow-hidden rounded-lg border bg-muted">
+                        {(() => {
+                          const video = availableVideos.find((vid) => vid.id === field.value);
+                          if (!video?.playbackId) return null;
+                          return (
+                            <Image
+                              src={`https://image.mux.com/${video.playbackId}/thumbnail.jpg?time=0`}
+                              alt={video.alt || 'Video thumbnail'}
+                              className="object-cover"
+                              fill
+                              sizes="(max-width: 768px) 100vw, 768px"
+                            />
+                          );
+                        })()}
+                      </div>
+                    )}
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        {/* 3. Description */}
         <FormField
           control={form.control}
           name="description"
@@ -116,13 +240,14 @@ export function ProjectForm({ spaceId, project, contentId }: ProjectFormProps) {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea {...field} />
+                <Textarea {...field} placeholder="Enter project description" />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
+        {/* 4. Year */}
         <FormField
           control={form.control}
           name="year"
@@ -141,6 +266,7 @@ export function ProjectForm({ spaceId, project, contentId }: ProjectFormProps) {
           )}
         />
 
+        {/* 5. Tags */}
         <FormField
           control={form.control}
           name="tags"
@@ -159,6 +285,7 @@ export function ProjectForm({ spaceId, project, contentId }: ProjectFormProps) {
           )}
         />
 
+        {/* 6. Details */}
         <FormField
           control={form.control}
           name="details"
@@ -176,131 +303,7 @@ export function ProjectForm({ spaceId, project, contentId }: ProjectFormProps) {
           )}
         />
 
-        <div className="space-y-4">
-          <FormField
-            control={form.control}
-            name="cover.type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Cover Type</FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    className="flex gap-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="none" id="none" />
-                      <label htmlFor="none">None</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="image" id="image" />
-                      <label htmlFor="image">Image</label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="video" id="video" />
-                      <label htmlFor="video">Video</label>
-                    </div>
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {form.watch('cover.type') === 'image' && (
-            <FormField
-              control={form.control}
-              name="cover.imageId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cover Image</FormLabel>
-                  <FormControl>
-                    <div className="space-y-4">
-                      <MediaSelector
-                        type="image"
-                        items={availableImages}
-                        selectedId={field.value || ''}
-                        onSelect={(id) => {
-                          field.onChange(id);
-                          form.setValue('cover.videoId', null);
-                        }}
-                        triggerLabel={field.value ? 'Change Cover Image' : 'Select Cover Image'}
-                        spaceId={spaceId}
-                      />
-                      {field.value && (
-                        <div className="relative aspect-video w-full max-w-xl overflow-hidden rounded-lg border">
-                          {(() => {
-                            const image = availableImages.find((img) => img.id === field.value);
-                            if (!image?.url) return null;
-
-                            return (
-                              <Image
-                                src={image.url}
-                                alt={image.alt || 'Cover preview'}
-                                className="object-cover"
-                                fill
-                                sizes="(max-width: 768px) 100vw, 768px"
-                              />
-                            );
-                          })()}
-                        </div>
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-
-          {form.watch('cover.type') === 'video' && (
-            <FormField
-              control={form.control}
-              name="cover.videoId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cover Video</FormLabel>
-                  <FormControl>
-                    <div className="space-y-4">
-                      <MediaSelector
-                        type="video"
-                        items={availableVideos}
-                        selectedId={field.value || ''}
-                        onSelect={(id) => {
-                          field.onChange(id);
-                          form.setValue('cover.imageId', null);
-                        }}
-                        triggerLabel={field.value ? 'Change Cover Video' : 'Select Cover Video'}
-                        spaceId={spaceId}
-                      />
-                      {field.value && (
-                        <div className="relative aspect-video w-full max-w-xl overflow-hidden rounded-lg border bg-muted">
-                          {(() => {
-                            const video = availableVideos.find((vid) => vid.id === field.value);
-                            if (!video?.playbackId) return null;
-
-                            return (
-                              <Image
-                                src={`https://image.mux.com/${video.playbackId}/thumbnail.jpg?time=0`}
-                                alt={video.alt || 'Video thumbnail'}
-                                className="object-cover"
-                                fill
-                                sizes="(max-width: 768px) 100vw, 768px"
-                              />
-                            );
-                          })()}
-                        </div>
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
-        </div>
-
+        {/* 7. Additional Project Images */}
         <div>
           <FormLabel>Project Images</FormLabel>
           <FormField
@@ -368,6 +371,7 @@ export function ProjectForm({ spaceId, project, contentId }: ProjectFormProps) {
           />
         </div>
 
+        {/* 8. Additional Project Videos */}
         <div>
           <FormLabel>Project Videos</FormLabel>
           <FormField
@@ -443,6 +447,7 @@ export function ProjectForm({ spaceId, project, contentId }: ProjectFormProps) {
           />
         </div>
 
+        {/* 9. Submission Buttons */}
         <div className="flex justify-end gap-4">
           <Button
             type="button"

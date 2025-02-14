@@ -29,6 +29,11 @@ export async function createClient() {
         }
       },
     },
+    global: {
+      headers: {
+        'sb-lb-routing-mode': 'alpha-all-services',
+      },
+    },
   });
 }
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { LogoIcon } from '@/components/icons/logo-icon';
 import {
   Sidebar,
   SidebarContent,
@@ -20,7 +21,6 @@ import { NavUser } from './nav-user';
 function useNavigationItems() {
   const { currentSpace } = useSpaceStore();
   const pathname = usePathname();
-
   if (!currentSpace) return [];
 
   const baseUrl = `/dashboard/${currentSpace.id}`;
@@ -69,15 +69,28 @@ export function AppSidebar() {
   const items = useNavigationItems();
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader />
+    <Sidebar collapsible="icon" className="border-r border-dashed border-border">
+      <SidebarHeader>
+        <SidebarMenuItem className="flex p-3">
+          <Link href="/dashboard">
+            <LogoIcon className="h-6 w-6 text-primary" />
+          </Link>
+        </SidebarMenuItem>
+      </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={item.isActive}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={item.isActive}
+                    tooltip={{
+                      children: item.title,
+                      side: 'right',
+                    }}
+                  >
                     <Link href={item.url}>
                       <item.icon />
                       <span>{item.title}</span>

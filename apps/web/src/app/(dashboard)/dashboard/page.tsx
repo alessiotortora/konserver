@@ -1,6 +1,6 @@
 import { createDefaultSpace } from '@/lib/actions/create/create-default-space';
 import { getDefaultSpace } from '@/lib/actions/get/get-default-space';
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@/utils/supabase/client/server';
 import { redirect } from 'next/navigation';
 
 export default async function DashboardPage() {

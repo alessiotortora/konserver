@@ -10,7 +10,7 @@ export function Header() {
   const title = usePageTitleStore((state) => state.title);
 
   return (
-    <header className="flex items-center shrink-0 p-3 w-full justify-between border-b border-dashed border-border">
+    <header className="flex items-center shrink-0 p-2 w-full justify-between border-b border-dashed border-border">
       <div className="flex items-center gap-2">
         <SidebarTrigger variant="ghost" />
         <Separator orientation="vertical" className="h-6" />

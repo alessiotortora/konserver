@@ -3,7 +3,7 @@
 import { db } from '@/db';
 import { content, imagesToContent, projects, videosToContent } from '@/db/schema';
 import { type CreateProjectSchema, createProjectSchema } from '@/lib/schemas/project';
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@/utils/supabase/client/server';
 import { and, eq } from 'drizzle-orm';
 
 export async function updateProject(

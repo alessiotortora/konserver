@@ -1,35 +1,26 @@
-import { updateSession } from '@/utils/supabase/middleware';
+// middleware.ts
+import { updateSession } from '@/utils/supabase/client/middleware';
 import type { NextRequest } from 'next/server';
-import { getSession } from './utils/supabase/session';
+import { getSession } from './utils/supabase/auth/session';
 
 export async function middleware(request: NextRequest) {
+  // Update the session (this handles cookie sync and, if needed, refreshes the session)
   const response = await updateSession(request);
 
+  // Retrieve the current session from your helper
   const {
     data: { session },
   } = await getSession();
 
-  if (!session?.user.id) {
+  if (!session?.user?.id) {
     return response;
   }
 
+  // If the user is authenticated, return the updated response
   return response;
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all request paths except for:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder files
-     */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-    // Protected routes that require authentication
-    '/dashboard/:path*',
-    // Auth routes that need session checking
-    '/login',
-    '/auth/:path*',
-  ],
+  // Run middleware on all non-API and non-static asset routes
+  matcher: ['/((?!api|_next|.*\\..*).*)'],
 };

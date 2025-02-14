@@ -1,4 +1,4 @@
-import { createClient } from './server';
+import { createClient } from '../client/server';
 
 export async function getSession() {
   const supabase = await createClient();

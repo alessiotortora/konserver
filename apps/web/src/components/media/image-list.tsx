@@ -1,6 +1,8 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
 import { useSpaceImages } from '@/hooks/use-space-media';
+import { MediaGridLayout } from './media-grid-layout';
 import { MediaItem } from './media-item';
 
 interface ImageListProps {
@@ -10,19 +12,33 @@ interface ImageListProps {
 export function ImageList({ spaceId }: ImageListProps) {
   const images = useSpaceImages(spaceId);
 
-  if (images.length === 0) {
+  if (images.isLoading) {
     return (
-      <div className="text-center py-4">
-        <p className="text-muted-foreground">No images found</p>
+      <div className="flex justify-center py-8">
+        <p className="text-muted-foreground">Loading images...</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {images.map((image) => (
-        <MediaItem key={image.id} item={image} />
-      ))}
+    <div className="space-y-4">
+      <MediaGridLayout items={images} emptyMessage="No images found">
+        {images.map((image) => (
+          <MediaItem key={image.id} item={image} />
+        ))}
+      </MediaGridLayout>
+
+      {images.hasNextPage && (
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            onClick={() => images.fetchNextPage()}
+            disabled={images.isFetchingNextPage}
+          >
+            {images.isFetchingNextPage ? 'Loading...' : 'Load More'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

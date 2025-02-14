@@ -16,7 +16,6 @@ export async function createUploadUrl({
 }: CreateMuxUploadParams): Promise<MuxUploadResponse> {
   if (!spaceId) throw new Error('Space ID is required');
 
-  console.log('Creating upload URL');
   try {
     const upload = await muxClient.video.uploads.create({
       new_asset_settings: {

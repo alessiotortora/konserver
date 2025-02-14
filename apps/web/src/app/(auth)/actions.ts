@@ -1,6 +1,6 @@
 'use server';
 
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@/utils/supabase/client/server';
 
 export async function SignInWithMagicLink(email: string) {
   const supabase = await createClient();

@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { users } from '@/db/schema';
-import { createClient } from '@/utils/supabase/server';
+import { createClient } from '@/utils/supabase/client/server';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 

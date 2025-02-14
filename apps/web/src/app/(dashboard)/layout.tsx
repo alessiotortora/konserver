@@ -8,12 +8,12 @@ interface DashboardLayoutProps {
 
 export default async function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={false}>
       <div className="flex h-screen overflow-hidden w-full">
         <AppSidebar />
         <main className="flex-1 flex flex-col overflow-hidden w-full">
           <Header />
-          <div className="flex-1 scrollbar-hide w-full">{children}</div>
+          <div className="flex-1 scrollbar-hide">{children}</div>
         </main>
       </div>
     </SidebarProvider>

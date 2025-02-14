@@ -1,4 +1,4 @@
-import { createClient } from '@/utils/supabase/client';
+import { createClient } from '@/utils/supabase/client/client';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { useEffect, useRef } from 'react';
 

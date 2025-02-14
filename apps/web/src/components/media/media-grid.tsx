@@ -10,8 +10,8 @@ interface MediaGridProps {
 }
 
 export async function MediaGrid({ spaceId }: MediaGridProps) {
-  void trpc.video.getVideos.prefetch({ spaceId });
-  void trpc.image.getImages.prefetch({ spaceId });
+  void trpc.video.getVideos.prefetchInfinite({ spaceId });
+  void trpc.image.getImages.prefetchInfinite({ spaceId });
 
   return (
     <HydrateClient>
