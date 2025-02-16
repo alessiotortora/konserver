@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 
+import { HeaderButtonContainer } from '@/components/layout/header-button-container';
 import { Heading } from '@/components/layout/heading';
 import { PageContainer } from '@/components/layout/page-container';
 import { AddMediaPopover } from '@/components/media/add-media-popover';
@@ -18,7 +19,9 @@ export default async function MediaPage({ params }: MediaPageProps) {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <Heading title="Media Library" description="Upload and manage your media assets" />
-          <AddMediaPopover spaceId={spaceId} />
+          <HeaderButtonContainer label="Add Media">
+            <AddMediaPopover spaceId={spaceId} />
+          </HeaderButtonContainer>
         </div>
 
         <Suspense fallback={<div>Loading media...</div>}>

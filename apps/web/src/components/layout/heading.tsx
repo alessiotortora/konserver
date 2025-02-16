@@ -1,6 +1,6 @@
 'use client';
 
-import { usePageTitleStore } from '@/store/use-page-title-store';
+import { useHeaderStore } from '@/store/header-store';
 import { useInView } from 'motion/react';
 import { useEffect, useRef } from 'react';
 
@@ -13,7 +13,7 @@ export function Heading({
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { amount: 0.3 });
-  const setTitle = usePageTitleStore((state) => state.setTitle);
+  const setTitle = useHeaderStore((state) => state.setTitle);
 
   useEffect(() => {
     setTitle(isInView ? '' : title);
