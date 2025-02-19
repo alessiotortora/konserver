@@ -16,6 +16,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { StickyBar } from '../layout/sticky-bar';
 import { MediaManager } from '../media/media-manager';
 import { MediaThumbnail } from '../media/media-thumbnail';
 import { Button } from '../ui/button';
@@ -455,27 +456,37 @@ export function ProjectForm({ spaceId, project, contentId }: ProjectFormProps) {
         </div>
 
         {/* 9. Submission Buttons */}
-        <div className="flex justify-end gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={async () => {
-              form.setValue('status', 'draft');
-              await form.handleSubmit(onSubmit)();
-            }}
-          >
-            {project ? 'Save as Draft' : 'Create as Draft'}
-          </Button>
-          <Button
-            type="button"
-            onClick={async () => {
-              form.setValue('status', 'published');
-              await form.handleSubmit(onSubmit)();
-            }}
-          >
-            {project ? 'Save & Publish' : 'Create & Publish'}
-          </Button>
-        </div>
+        <StickyBar position="bottom">
+          <div className="flex justify-between gap-4">
+            <span className="text-sm text-muted-foreground">
+              Last updated:{' '}
+              {project?.updatedAt
+                ? project.updatedAt.toISOString().split('T')[0].split('-').reverse().join('-')
+                : ''}
+            </span>
+            <div className="flex gap-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={async () => {
+                  form.setValue('status', 'draft');
+                  await form.handleSubmit(onSubmit)();
+                }}
+              >
+                {project ? 'Save as Draft' : 'Create as Draft'}
+              </Button>
+              <Button
+                type="button"
+                onClick={async () => {
+                  form.setValue('status', 'published');
+                  await form.handleSubmit(onSubmit)();
+                }}
+              >
+                {project ? 'Save & Publish' : 'Create & Publish'}
+              </Button>
+            </div>
+          </div>
+        </StickyBar>
       </form>
     </Form>
   );

@@ -2,7 +2,6 @@
 
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useHeaderStore } from '@/store/header-store';
 import { AnimatePresence, motion } from 'motion/react';
 
@@ -11,7 +10,7 @@ export function Header() {
   const button = useHeaderStore((state) => state.button);
 
   return (
-    <header className="flex items-center shrink-0 p-2 w-full justify-between border-b border-dashed border-border">
+    <header className="flex items-center shrink-0 p-3 w-full justify-between border-b border-dashed border-border">
       <div className="flex items-center gap-2">
         <SidebarTrigger variant="ghost" />
         <Separator orientation="vertical" className="h-6" />
@@ -42,7 +41,6 @@ export function Header() {
             </motion.div>
           )}
         </AnimatePresence>
-        <ThemeToggle />
       </div>
     </header>
   );

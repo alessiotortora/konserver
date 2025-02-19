@@ -1,5 +1,5 @@
 import type { inferRouterOutputs } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure } from '../init';
+import { createTRPCRouter } from '../init'; // protectedProcedure will be used later
 import { imageRouter } from './image';
 import { videoRouter } from './video';
 

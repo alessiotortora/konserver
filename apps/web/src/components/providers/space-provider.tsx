@@ -10,12 +10,30 @@ interface SpaceProviderProps {
 }
 
 export function SpaceProvider({ children, space }: SpaceProviderProps) {
-  const { setCurrentSpace, setLoading } = useSpaceStore();
+  const setCurrentSpace = useSpaceStore((state) => state.setCurrentSpace);
+  const setLoading = useSpaceStore((state) => state.setLoading);
 
   useEffect(() => {
-    setCurrentSpace(space);
-    setLoading(false);
+    // Set loading true on mount
+    setLoading(true);
+
+    try {
+      // Update space in store
+      setCurrentSpace(space);
+    } catch (error) {
+      console.error('Error setting space:', error);
+    } finally {
+      // Ensure loading is set to false even if there's an error
+      setLoading(false);
+    }
+
+    // Cleanup function to reset store state when unmounting
+    return () => {
+      setCurrentSpace(null);
+      setLoading(false);
+    };
   }, [space, setCurrentSpace, setLoading]);
 
-  return children;
+  // Wrap children in a fragment to avoid unnecessary DOM nesting
+  return <>{children}</>;
 }

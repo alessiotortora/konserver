@@ -15,7 +15,7 @@ interface MediaPageProps {
 export default async function MediaPage({ params }: MediaPageProps) {
   const { spaceId } = await params;
   return (
-    <PageContainer>
+    <PageContainer fadeBottom>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <Heading title="Media Library" description="Upload and manage your media assets" />

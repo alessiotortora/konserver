@@ -19,7 +19,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   }
 
   return (
-    <PageContainer>
+    <PageContainer noPadding>
       <div className="space-y-6">
         <Heading title="Edit Project" description="Update your project information" />
 

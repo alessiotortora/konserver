@@ -10,7 +10,7 @@ interface SpaceState {
 
 export const useSpaceStore = create<SpaceState>((set) => ({
   currentSpace: null,
-  isLoading: true,
+  isLoading: false,
   setCurrentSpace: (space) => set({ currentSpace: space }),
   setLoading: (isLoading) => set({ isLoading }),
 }));

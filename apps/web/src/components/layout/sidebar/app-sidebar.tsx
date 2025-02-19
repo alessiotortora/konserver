@@ -17,6 +17,7 @@ import { CalendarFold, Cog, File, FileText, Home, Images } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { NavUser } from './nav-user';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 function useNavigationItems() {
   const { currentSpace } = useSpaceStore();
@@ -103,6 +104,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
+        <ThemeToggle />
         <NavUser />
       </SidebarFooter>
     </Sidebar>

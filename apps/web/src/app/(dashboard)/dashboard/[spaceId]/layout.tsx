@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { spaces } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
+import { cache } from 'react';
 
 type Params = Promise<{ spaceId: string }>;
 
@@ -11,11 +12,12 @@ interface SpaceLayoutProps {
   params: Params;
 }
 
-async function getSpace(spaceId: string) {
+// Cache the getSpace function to avoid duplicate requests
+const getSpace = cache(async (spaceId: string) => {
   const [space] = await db.select().from(spaces).where(eq(spaces.id, spaceId));
 
   return space;
-}
+});
 
 export default async function SpaceLayout({ children, params }: SpaceLayoutProps) {
   const { spaceId } = await params;

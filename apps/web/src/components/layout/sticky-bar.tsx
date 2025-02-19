@@ -6,15 +6,19 @@ import type { ReactNode } from 'react';
 interface StickyBarProps {
   children: ReactNode;
   className?: string;
+  position?: 'top' | 'bottom';
 }
 
-export function StickyBar({ children, className }: StickyBarProps) {
+export function StickyBar({ children, className, position = 'top' }: StickyBarProps) {
   return (
     <div
       className={cn(
-        'sticky top-0 w-full',
+        'sticky w-[calc(100%+2rem)] -ml-4',
+        position === 'top' ? 'top-0' : 'bottom-0',
         'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60',
-        'z-20 pt-4 pb-4',
+        'z-20',
+        position === 'bottom' && 'border-t',
+        'p-4',
         className
       )}
     >
