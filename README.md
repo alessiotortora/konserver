@@ -20,9 +20,3 @@ This dashboard is built using a modular, flexible architecture:
 
 This stack is chosen for its performance, developer experience, and flexibility—making each part easily replaceable if needed.
 
-## Getting Started
-
-1. Clone the repository:
-
-```bash
-git clone https://github.com/yourusername/personal-dashboard.git
